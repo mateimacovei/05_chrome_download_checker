@@ -1,0 +1,21 @@
+button {
+  height: 30px;
+  width: 30px;
+  outline: none;
+  margin: 10px;
+  border-style: solid;
+  border-radius: 2px;
+}
+
+button.square {
+  width: 30px;
+}
+
+button.rectangle {
+  width: 300px;
+}
+  
+button.current {
+  box-shadow: 0 0 0 2px white,
+              0 0 0 4px black;
+}
