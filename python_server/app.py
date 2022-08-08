@@ -17,15 +17,18 @@ app.add_middleware(
 # init
 files_found = read_config_and_get_files()
 
+
 @app.get("/ping", status_code=200)
 async def ping():
     return "hi"
+
 
 @app.get("/refresh", status_code=200)
 async def refresh_files():
     files_found = read_config_and_get_files()
     return files_found
 
+
 @app.get("/contains")
-async def refresh_files(name: str):
-    return [f for f in files_found if f.name_without_ext.find(name)!=-1]
+async def find_file_name_containing(name: str):
+    return [f for f in files_found if f.name_without_ext.find(name) != -1]

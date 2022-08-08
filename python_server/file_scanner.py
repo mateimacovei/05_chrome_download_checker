@@ -22,13 +22,14 @@ def load_json(path: str):
 
 def get_files_in_folder(path: str):
     files = [MyFile(path, f) for f in listdir(path) if isfile(join(path, f))]
-    return [f for f in files if f.name_without_ext!=""]
+    return [f for f in files if f.name_without_ext != ""]
 
 
 def get_directories_in_folder(path: str):
     contents = [join(path, f) for f in listdir(path)]
     directories = [d for d in contents if isdir(d)]
     return directories
+
 
 def recursive_get_files(directory: str, recursive: bool):
     files_found = get_files_in_folder(directory)
@@ -50,11 +51,11 @@ def read_config_and_get_files():
 
     files_found = []
     for folder_to_read in config:
-        files_found.extend(recursive_get_files(folder_to_read['folder'], folder_to_read['recursive']))
+        files_found.extend(recursive_get_files(
+            folder_to_read['folder'], folder_to_read['recursive']))
 
     print("read all files")
     return files_found
-
 
 
 # 'config/folders.json'
@@ -68,6 +69,3 @@ if __name__ == "__main__":
           f.name_without_ext for f in recursive_get_files(curdir, True)])
     print('folders in current dir: ', get_directories_in_folder(curdir))
     # print([f.name_without_ext for f in recursive_get_files("E:\\01_Vault\\Phone photos", True)])
-
-
-
