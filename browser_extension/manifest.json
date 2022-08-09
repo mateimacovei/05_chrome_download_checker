@@ -28,10 +28,9 @@
     },
     "options_page": "options.html",
     "content_scripts": [
-
         {
             "matches": [
-                "https://www.pixiv.net/*","https://www.google.com/*"
+                "https://www.pixiv.net/*"
             ],
             "js": [
                 "pixiv_script.js"
@@ -41,14 +40,24 @@
             ]
         },
         {
-            "matches":[
+            "matches": [
                 "https://pbs.twimg.com/*"
             ],
-            "js":[
+            "js": [
                 "twitter_convert_to_png.js"
             ],
             "css": [
                 "pic_extension.css"
+            ]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "images/resources/*"
+            ],
+            "matches": [
+                "https://www.pixiv.net/*", "https://twitter.com/*"
             ]
         }
     ]

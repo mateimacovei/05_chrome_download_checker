@@ -6,3 +6,9 @@ div.fixed {
     border: 3px solid #ffffff;
 }
 
+
+div.frame {
+    display: flex;
+    align-items: center;
+}
+
