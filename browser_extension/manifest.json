@@ -30,7 +30,7 @@
     "content_scripts": [
         {
             "matches": [
-                "https://www.pixiv.net/*"
+                "https://www.pixiv.net/en/artworks/*"
             ],
             "js": [
                 "pixiv_script.js"

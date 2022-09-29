@@ -19,14 +19,23 @@ downloadedFinderExtensionShowView.addEventListener("click", async () => {
     function: setExtensionFixedViewAsVisible,
   });
 });
-  
+
 
 
 
 function setExtensionFixedViewAsHidden() {
-  document.getElementById("downloadedFinderExtensionRootDiv").style.display="none"
+  document.getElementById("downloadedFinderExtensionRootDiv").style.display = "none"
+  let hidden = true
+  chrome.storage.sync.set({ hidden });
 }
 
 function setExtensionFixedViewAsVisible() {
-  document.getElementById("downloadedFinderExtensionRootDiv").style.display=""
+  let hidden = false
+  chrome.storage.sync.set({ hidden });
+  try {
+    document.getElementById("downloadedFinderExtensionRootDiv").style.display = ""
+  } catch {
+    console.log('view was not created. Reloading page');
+    location.reload();
+  }
 }

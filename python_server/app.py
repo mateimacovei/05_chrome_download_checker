@@ -25,7 +25,12 @@ async def ping():
 
 @app.get("/refresh", status_code=200)
 async def refresh_files():
+    # not working
     files_found = read_config_and_get_files()
+    return files_found
+
+@app.get("/all", status_code=200)
+async def get_all():
     return files_found
 
 
