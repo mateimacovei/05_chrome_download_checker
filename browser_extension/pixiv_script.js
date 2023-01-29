@@ -3,7 +3,7 @@
 
 var currentUrl = "";
 
-chrome.storage.sync.get(["hidden","backendUrl"], (data) => {
+chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
     if (data.hidden != true) {
         var TOTAL_HEIGHT = 300
         var TOTAL_WIDTH = 200
@@ -31,16 +31,9 @@ chrome.storage.sync.get(["hidden","backendUrl"], (data) => {
             parentDiv.style.backgroundColor = color;
         });
 
-        // var previousUrl = '';
-        // var observer = new MutationObserver(function (mutations) {
-        //     if (location.href !== previousUrl) {
-        //         previousUrl = location.href;
-        //         console.log(`URL changed to ${location.href}`);
-        //     }
-        // });
 
-        function performCallToServer(url) {
-            let pictureSearch = url.split("/").at(-1)
+        function performCallToServer(picture_name) {
+            let pictureSearch = picture_name.split("/").at(-1)
 
             let loadImages = new XMLHttpRequest()
             loadImages.onreadystatechange = function () {
@@ -94,6 +87,14 @@ chrome.storage.sync.get(["hidden","backendUrl"], (data) => {
             }
         }
 
+        function create_centering_div() {
+            let centeringDiv = document.createElement("div")
+            centeringDiv.style.width = TOP_BAR_HEIGHT + 'px'
+            centeringDiv.style.height = TOP_BAR_HEIGHT + 'px'
+            centeringDiv.classList.add('frame');
+            return centeringDiv
+        }
+
 
 
         // var t = document.createTextNode("CLICK ME. Page: "+window.location.href);
@@ -107,23 +108,30 @@ chrome.storage.sync.get(["hidden","backendUrl"], (data) => {
             topBarDiv.style.width = TOTAL_WIDTH + 'px'
             topBarDiv.style.height = TOP_BAR_HEIGHT + 'px'
 
+            let refreshIcon = document.createElement("img")
+            refreshIcon.src = chrome.runtime.getURL('images/resources/reload_icon.png')
+            refreshIcon.alt = "Refresh"
+            refreshIcon.style.width = (TOP_BAR_HEIGHT - 15) + 'px'
+            refreshIcon.style.height = (TOP_BAR_HEIGHT - 15) + 'px'
+            refreshIcon.draggable = false
+            refreshIcon.addEventListener("click", async () => { checkURLchange() });
+
             let titleText = document.createElement('h3')
             titleText.textContent = " Image finder"
             titleText.style.width = (TOTAL_WIDTH - TOP_BAR_HEIGHT) + 'px'
             titleText.style.display = 'inline-block'
             titleText.style.float = 'left'
+            titleText.style.padding = '40px'
 
-            let centeringDiv = document.createElement("div")
-            centeringDiv.style.width = TOP_BAR_HEIGHT + 'px'
-            centeringDiv.style.height = TOP_BAR_HEIGHT + 'px'
-            centeringDiv.classList.add('frame');
+            var centeringDiv = create_centering_div()
+            var centeringDiv2 = create_centering_div()
+
 
             let closeIcon = document.createElement("img")
             closeIcon.src = chrome.runtime.getURL('images/resources/close_icon.png')
             closeIcon.alt = "Close"
             closeIcon.style.width = (TOP_BAR_HEIGHT - 15) + 'px'
             closeIcon.style.height = (TOP_BAR_HEIGHT - 15) + 'px'
-
             closeIcon.draggable = false
             closeIcon.addEventListener("click", async () => {
                 parentDiv.style.display = "none"
@@ -131,8 +139,12 @@ chrome.storage.sync.get(["hidden","backendUrl"], (data) => {
                 chrome.storage.sync.set({ hidden });
             });
 
-            centeringDiv.replaceChildren(closeIcon)
-            topBarDiv.replaceChildren(titleText, centeringDiv)
+            // centeringDiv.replaceChildren(closeIcon)
+            // centeringDiv2.replaceChildren(refreshIcon)
+            // topBarDiv.replaceChildren(centeringDiv2, titleText, centeringDiv)
+
+            centeringDiv.replaceChildren(refreshIcon, titleText, closeIcon)
+            topBarDiv.replaceChildren(centeringDiv)
 
             return topBarDiv
         }
@@ -148,16 +160,16 @@ chrome.storage.sync.get(["hidden","backendUrl"], (data) => {
             contentDiv.replaceChildren(imageElement)
         }
 
-        function checkURLchange(){
+        function checkURLchange() {
             let newUrl = window.location.href;
-            if(newUrl != currentUrl){
+            if (newUrl != currentUrl) {
                 console.log("url changed!");
                 currentUrl = newUrl;
                 setAsLoading()
                 performCallToServer(currentUrl)
             }
         }
-        
+
         checkURLchange()
     }
 })
