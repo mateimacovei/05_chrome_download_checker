@@ -41,6 +41,18 @@
         },
         {
             "matches": [
+                "https://twitter.com/*/status/*"
+            ],
+            "js": [
+                "twitter_script.js"
+            ],
+            "css": [
+                "pic_extension.css"
+            ],
+            "run_at": "document_end"
+        },
+        {
+            "matches": [
                 "https://pbs.twimg.com/*"
             ],
             "js": [

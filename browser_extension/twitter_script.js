@@ -31,9 +31,29 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             parentDiv.style.backgroundColor = color;
         });
 
+        function findImagesInPage() {
+            result = [];
+
+            images = document.querySelector('div[data-testid="cellInnerDiv"]').getElementsByTagName('img')
+            for (var i = 0; i < images.length; i++) {
+                if (images[i].getAttribute("alt") == "Image") {
+                    let url = images[i].src;
+                    result.push(url.substring(28, url.indexOf('?format=')))
+
+                }
+            }
+            return result;
+        }
+
 
         function performCallToServer(picture_name) {
-            let pictureSearch = picture_name.split("/").at(-1)
+            console.log("starting search");
+            let imagesInPage = findImagesInPage();
+            if(imagesInPage.length==0){
+                replaceContentWithText('No image found. Go to tweet');
+                return;
+            }
+            let postBody = JSON.stringify(imagesInPage);
 
             let loadImages = new XMLHttpRequest()
             loadImages.onreadystatechange = function () {
@@ -41,7 +61,7 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
                     if (this.status == 200) {
                         console.log('Success');
                         let response = JSON.parse(this.responseText)
-                        setContentResult(response, pictureSearch)
+                        setContentResult(response, imagesInPage)
                     }
                     else {
                         setAsFailure()
@@ -49,12 +69,13 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
                 }
             }
 
-            console.log('Seaching for ' + pictureSearch);
+            console.log('Seaching for ' + imagesInPage);
 
-            loadImages.open("GET", "http://localhost:8000/contains?name=" + pictureSearch
+            loadImages.open("POST", "http://localhost:8000/contains"
                 // + "?t=" + Math.random()
                 , true);
-            loadImages.send();
+            loadImages.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            loadImages.send(postBody);
         }
 
         function replaceContentWithText(string) {
@@ -173,7 +194,10 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             }
         }
 
-        checkURLchange()
+
+        setTimeout(() => {
+            checkURLchange()
+        }, 2500);
     }
 })
 

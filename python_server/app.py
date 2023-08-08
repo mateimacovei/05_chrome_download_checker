@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 
 from file_scanner import read_config_and_get_files, MyFile
@@ -37,3 +39,14 @@ async def get_all():
 @app.get("/contains")
 async def find_file_name_containing(name: str):
     return [f for f in files_found if f.name_without_ext.find(name) != -1]
+
+
+def any_names_match(file: MyFile, names: list[str])-> bool:
+    for name in names:
+        if file.name_without_ext.find(name) != -1:
+            return True
+    return False
+
+@app.post("/contains")
+async def find_file_name_containing_str_in_list(names: list[str]):
+    return [f for f in files_found if any_names_match(f, names)]
