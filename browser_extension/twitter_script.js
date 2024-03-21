@@ -29,29 +29,38 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
         });
 
         function findImagesInPage() {
-            result = [];
             if (currentUrl.indexOf('/photo/') == -1) {
-                images = document.querySelector('div[data-testid="cellInnerDiv"]').getElementsByTagName('img')
-                for (var i = 0; i < images.length; i++) {
-                    if (images[i].getAttribute("alt") == "Image") {
-                        let url = images[i].src;
-                        result.push(url.substring(28, url.indexOf('?format=')))
-
-                    }
-                }
+                return extractFromImages(document.querySelector('div[data-testid="cellInnerDiv"]').getElementsByTagName('img'));
             } else {
                 images = document.querySelectorAll('li[role="listitem"]')
-                for (var i = 0; i < images.length; i++) {
+                let result = [];
+                if (images.length > 0) {
+                    for (var i = 0; i < images.length; i++) {
 
-                    let imgHtmlEl = images[i].getElementsByTagName('img')[0];
-                    if (imgHtmlEl.getAttribute("alt") == "Image") {
-                        let url = imgHtmlEl.src;
-                        result.push(url.substring(28, url.indexOf('?format=')))
+                        let imgHtmlEl = images[i].getElementsByTagName('img')[0];
+                        if (imgHtmlEl.getAttribute("alt") == "Image") {
+                            let url = imgHtmlEl.src;
+                            result.push(url.substring(28, url.indexOf('?format=')))
 
+                        }
                     }
+                    return result;
+                } else {
+                    return extractFromImages(document.querySelector('div[data-testid="swipe-to-dismiss"]').getElementsByTagName('img'));
                 }
             }
-            return result;
+        }
+
+        function extractFromImages(imgHtmlElements) {
+            let results = [];
+            for (var i = 0; i < imgHtmlElements.length; i++) {
+                if (imgHtmlElements[i].getAttribute("alt") == "Image") {
+                    let url = imgHtmlElements[i].src;
+                    results.push(url.substring(28, url.indexOf('?format=')))
+
+                }
+            }
+            return results;
         }
 
 
