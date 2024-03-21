@@ -56,7 +56,7 @@
                 "https://pbs.twimg.com/*"
             ],
             "js": [
-                "twitter_convert_to_png.js"
+                "twitter_single_image_script.js"
             ],
             "css": [
                 "pic_extension.css"
@@ -69,7 +69,7 @@
                 "images/resources/*"
             ],
             "matches": [
-                "https://www.pixiv.net/*", "https://twitter.com/*"
+                "https://www.pixiv.net/*", "https://twitter.com/*", "https://pbs.twimg.com/*"
             ]
         }
     ]

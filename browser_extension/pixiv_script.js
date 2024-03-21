@@ -9,8 +9,6 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
         var TOTAL_WIDTH = 200
         var TOP_BAR_HEIGHT = 50
 
-        // Checking page title
-        // if (document.title.indexOf("Google") != -1) {
         //Creating Elements
         var parentDiv = document.createElement("div")
         parentDiv.id = "downloadedFinderExtensionRootDiv"
@@ -32,8 +30,8 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
         });
 
 
-        function performCallToServer(picture_name) {
-            let pictureSearch = picture_name.split("/").at(-1)
+        function performCallToServer() {
+            let pictureSearch = currentUrl.split("/").at(-1)
 
             let loadImages = new XMLHttpRequest()
             loadImages.onreadystatechange = function () {
@@ -49,7 +47,6 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
                 }
             }
 
-            console.log('Seaching for ' + pictureSearch);
 
             loadImages.open("GET", "http://localhost:8000/contains?name=" + pictureSearch
                 // + "?t=" + Math.random()
@@ -169,7 +166,7 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
                 console.log("url changed!");
                 currentUrl = newUrl;
                 setAsLoading()
-                performCallToServer(currentUrl)
+                performCallToServer()
             }
         }
 

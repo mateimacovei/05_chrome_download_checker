@@ -6,8 +6,6 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
         var TOTAL_WIDTH = 200
         var TOP_BAR_HEIGHT = 50
 
-        // Checking page title
-        // if (document.title.indexOf("Google") != -1) {
         //Creating Elements
         var parentDiv = document.createElement("div")
         parentDiv.id = "downloadedFinderExtensionRootDiv"
@@ -28,41 +26,9 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             parentDiv.style.backgroundColor = color;
         });
 
-        function findImagesInPage() {
-            result = [];
-            if (currentUrl.indexOf('/photo/') == -1) {
-                images = document.querySelector('div[data-testid="cellInnerDiv"]').getElementsByTagName('img')
-                for (var i = 0; i < images.length; i++) {
-                    if (images[i].getAttribute("alt") == "Image") {
-                        let url = images[i].src;
-                        result.push(url.substring(28, url.indexOf('?format=')))
-
-                    }
-                }
-            } else {
-                images = document.querySelectorAll('li[role="listitem"]')
-                for (var i = 0; i < images.length; i++) {
-
-                    let imgHtmlEl = images[i].getElementsByTagName('img')[0];
-                    if (imgHtmlEl.getAttribute("alt") == "Image") {
-                        let url = imgHtmlEl.src;
-                        result.push(url.substring(28, url.indexOf('?format=')))
-
-                    }
-                }
-            }
-            return result;
-        }
-
-
         function performCallToServer() {
             console.log("starting search");
-            let imagesInPage = findImagesInPage();
-            if (imagesInPage.length == 0) {
-                replaceContentWithText('No image found. Go to tweet');
-                return;
-            }
-            let postBody = JSON.stringify(imagesInPage);
+            let imageInPage = currentUrl.substring(28, currentUrl.indexOf('?format='));
 
             let loadImages = new XMLHttpRequest()
             loadImages.onreadystatechange = function () {
@@ -70,7 +36,7 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
                     if (this.status == 200) {
                         console.log('Success');
                         let response = JSON.parse(this.responseText)
-                        setContentResult(response, imagesInPage)
+                        setContentResult(response, imageInPage)
                     }
                     else {
                         setAsFailure()
@@ -78,9 +44,9 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
                 }
             }
 
-            loadImages.open("POST", "http://localhost:8000/contains", true);
-            loadImages.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            loadImages.send(postBody);
+
+            loadImages.open("GET", "http://localhost:8000/contains?name=" + imageInPage, true);
+            loadImages.send();
         }
 
         function replaceContentWithText(string) {
@@ -96,9 +62,9 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             replaceContentWithText('Failed to get response from server')
         }
 
-        function setContentResult(response, imagesInPage) {
+        function setContentResult(response, imageInPage) {
             if (response.length == 0) {
-                replaceContentWithText('No saved pictures found for ' + listToString(imagesInPage))
+                replaceContentWithText('No saved pictures found for ' + imageInPage)
             } else {
 
                 let listTag = document.createElement("ul")
@@ -113,14 +79,6 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
 
                 contentDiv.replaceChildren(listTag)
             }
-        }
-
-        function listToString(imagesInPage) {
-            let res = ''
-            for (let i = 0; i < imagesInPage.length; i++) {
-                res = res + imagesInPage[i] + ' ';
-            }
-            return res;
         }
 
         function create_centering_div() {
@@ -211,9 +169,7 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
         }
 
 
-        setTimeout(() => {
-            checkURLchange()
-        }, 2500);
+        checkURLchange();
     }
 })
 
