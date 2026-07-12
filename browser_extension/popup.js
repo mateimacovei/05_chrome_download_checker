@@ -7,7 +7,7 @@ downloadedFinderExtensionHideView.addEventListener("click", async () => {
 
   chrome.scripting.executeScript({
     target: { tabId: tab.id },
-    function: setExtensionFixedViewAsHidden,
+    func: setExtensionFixedViewAsHidden,
   });
 });
 
@@ -16,7 +16,7 @@ downloadedFinderExtensionShowView.addEventListener("click", async () => {
 
   chrome.scripting.executeScript({
     target: { tabId: tab.id },
-    function: setExtensionFixedViewAsVisible,
+    func: setExtensionFixedViewAsVisible,
   });
 });
 

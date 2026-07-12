@@ -1,0 +1,94 @@
+{
+    "name": "Chrome pic finder",
+    "description": "Search downloads",
+    "version": "1.0",
+    "manifest_version": 3,
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "permissions": [
+        "storage",
+        "activeTab",
+        "scripting"
+    ],
+    "host_permissions": [
+        "http://localhost:8000/*"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "/images/get_started16.png",
+            "32": "/images/get_started32.png",
+            "48": "/images/get_started48.png",
+            "128": "/images/get_started128.png"
+        }
+    },
+    "icons": {
+        "16": "/images/get_started16.png",
+        "32": "/images/get_started32.png",
+        "48": "/images/get_started48.png",
+        "128": "/images/get_started128.png"
+    },
+    "options_page": "options.html",
+    "content_scripts": [
+        {
+            "matches": [
+                "https://www.pixiv.net/en/artworks/*"
+            ],
+            "js": [
+                "pixiv_script.js"
+            ],
+            "css": [
+                "pic_extension.css"
+            ]
+        },
+        {
+            "matches": [
+                "https://twitter.com/*/status/*"
+            ],
+            "js": [
+                "twitter_script.js"
+            ],
+            "css": [
+                "pic_extension.css"
+            ],
+            "run_at": "document_end"
+        },
+        {
+            "matches": [
+                "https://pbs.twimg.com/*"
+            ],
+            "js": [
+                "twitter_single_image_script.js"
+            ],
+            "css": [
+                "pic_extension.css"
+            ]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "images/resources/*"
+            ],
+            "matches": [
+                "https://www.pixiv.net/*",
+                "https://twitter.com/*",
+                "https://pbs.twimg.com/*"
+            ]
+        }
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "chrome-pic-finder@example.local",
+            "strict_min_version": "121.0",
+            "data_collection_permissions": {
+                "required": [
+                    "none"
+                ]
+            }
+        }
+    }
+}

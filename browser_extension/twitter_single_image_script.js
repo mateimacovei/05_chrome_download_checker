@@ -2,6 +2,7 @@ var currentUrl = "";
 
 chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
     if (data.hidden != true) {
+        const backendUrl = data.backendUrl || "http://localhost:8000";
         var TOTAL_HEIGHT = 300
         var TOTAL_WIDTH = 200
         var TOP_BAR_HEIGHT = 50
@@ -45,7 +46,7 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             }
 
 
-            loadImages.open("GET", "http://localhost:8000/contains?name=" + imageInPage, true);
+            loadImages.open("GET", backendUrl + "/contains?name=" + imageInPage, true);
             loadImages.send();
         }
 
@@ -93,7 +94,7 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
 
         // var t = document.createTextNode("CLICK ME. Page: "+window.location.href);
         // parentDiv.appendChild(t);
-        //Appending to DOM 
+        //Appending to DOM
         document.body.appendChild(parentDiv);
         // }
 
