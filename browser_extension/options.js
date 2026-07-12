@@ -9,6 +9,7 @@ function handleButtonClick(event) {
   let current = event.target.parentElement.querySelector(
     `.${selectedClassName}`
   );
+  
   if (current && current !== event.target) {
     current.classList.remove(selectedClassName);
   }
