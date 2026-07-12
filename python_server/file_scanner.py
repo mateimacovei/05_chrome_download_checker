@@ -1,6 +1,18 @@
 import json
+import os
 from os import listdir
 from os.path import isfile, isdir, join
+
+
+def is_windows_drive_path(path: str):
+    return len(path) >= 3 and path[0].isalpha() and path[1] == ':' and path[2] in ('\\', '/')
+
+
+def filter_config_for_os(config, os_name: str):
+    if os_name == 'nt':
+        return [entry for entry in config if is_windows_drive_path(entry['folder'])]
+
+    return [entry for entry in config if entry['folder'].startswith('/')]
 
 
 class MyFile:
@@ -47,7 +59,7 @@ def recursive_get_files(directory: str, recursive: bool):
 
 
 def read_config_and_get_files():
-    config = load_json('config/folders.json')
+    config = filter_config_for_os(load_json('config/folders.json'), os.name)
 
     files_found = []
     for folder_to_read in config:

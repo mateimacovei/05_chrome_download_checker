@@ -2,5 +2,9 @@
     {
         "folder": "c:/folder",
         "recursive": true
+    },
+    {
+        "folder": "/home/user/folder",
+        "recursive": true
     }
 ]
