@@ -1,4 +1,4 @@
-# 05_chrome_download_checker
+# Browser download checker
 
 Browser extension and local Python backend for checking whether images from supported websites already exist in configured local folders.
 
