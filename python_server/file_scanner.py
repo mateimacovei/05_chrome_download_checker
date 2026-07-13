@@ -1,7 +1,6 @@
 import json
 import os
-from os import listdir
-from os.path import isfile, isdir, join
+from pathlib import Path
 
 
 def is_windows_drive_path(path: str):
@@ -33,33 +32,63 @@ def load_json(path: str):
 
 
 def get_files_in_folder(path: str):
-    files = [MyFile(path, f) for f in listdir(path) if isfile(join(path, f))]
-    return [f for f in files if f.name_without_ext != ""]
+    files = []
+    try:
+        with os.scandir(path) as entries:
+            for entry in entries:
+                try:
+                    if entry.is_file():
+                        file = MyFile(path, entry.name)
+                        if file.name_without_ext != "":
+                            files.append(file)
+                except OSError:
+                    continue
+    except OSError:
+        return []
+
+    return files
 
 
 def get_directories_in_folder(path: str):
-    contents = [join(path, f) for f in listdir(path)]
-    directories = [d for d in contents if isdir(d)]
+    directories = []
+    try:
+        with os.scandir(path) as entries:
+            for entry in entries:
+                try:
+                    if entry.is_dir(follow_symlinks=False):
+                        directories.append(entry.path)
+                except OSError:
+                    continue
+    except OSError:
+        return []
+
     return directories
 
 
 def recursive_get_files(directory: str, recursive: bool):
-    files_found = get_files_in_folder(directory)
+    files_found = []
+    folders_to_scan = [directory]
+    visited_dirs = set()
 
-    if(recursive):
-        folders_to_scan = get_directories_in_folder(directory)
+    # an empty list is evaluated to false
+    while folders_to_scan:
+        current_dir = folders_to_scan.pop()
+        real_dir = os.path.realpath(current_dir)
+        if real_dir in visited_dirs:
+            continue
+        visited_dirs.add(real_dir)
 
-        # an empty list is evaluated to false
-        while folders_to_scan:
-            current_dir = folders_to_scan.pop()
-            files_found.extend(get_files_in_folder(current_dir))
+        files_found.extend(get_files_in_folder(current_dir))
+
+        if(recursive):
             folders_to_scan.extend(get_directories_in_folder(current_dir))
 
     return files_found
 
 
 def read_config_and_get_files():
-    config = filter_config_for_os(load_json('config/folders.json'), os.name)
+    config_path = Path(__file__).resolve().parent / 'config' / 'folders.json'
+    config = filter_config_for_os(load_json(config_path), os.name)
 
     files_found = []
     for folder_to_read in config:

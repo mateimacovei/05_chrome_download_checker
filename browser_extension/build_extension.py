@@ -12,23 +12,28 @@ BROWSER_MANIFESTS = {
     "firefox": "manifest.firefox.json",
 }
 
-SHARED_FILE_SUFFIXES = {".css", ".html", ".js"}
-EXCLUDED_FILENAMES = {
-    "build_extension.py",
-    "manifest.json",
-    "manifest.chrome.json",
-    "manifest.firefox.json",
-    "test_extension_build.py",
-    "test_extension_static.py",
-}
+SHARED_FILES = (
+    "background.js",
+    "button.css",
+    "content_common.js",
+    "options.html",
+    "options.js",
+    "pic_extension.css",
+    "pixiv_script.js",
+    "popup.html",
+    "popup.js",
+    "twitter_convert_to_png.js",
+    "twitter_script.js",
+    "twitter_single_image_script.js",
+)
 
 
 def copy_shared_assets(target_dir: Path) -> None:
-    for source_file in SOURCE_DIR.iterdir():
-        if source_file.name in EXCLUDED_FILENAMES:
-            continue
-        if source_file.is_file() and source_file.suffix in SHARED_FILE_SUFFIXES:
-            shutil.copy2(source_file, target_dir / source_file.name)
+    for file_name in SHARED_FILES:
+        source_file = SOURCE_DIR / file_name
+        if not source_file.is_file():
+            raise FileNotFoundError(f"Missing required extension file: {source_file}")
+        shutil.copy2(source_file, target_dir / file_name)
 
     images_dir = SOURCE_DIR / "images"
     if not images_dir.is_dir():

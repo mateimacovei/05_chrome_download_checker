@@ -12,7 +12,7 @@
         "scripting"
     ],
     "host_permissions": [
-        "http://localhost:8000/*"
+        "http://localhost/*"
     ],
     "action": {
         "default_popup": "popup.html",
@@ -36,6 +36,7 @@
                 "https://www.pixiv.net/en/artworks/*"
             ],
             "js": [
+                "content_common.js",
                 "pixiv_script.js"
             ],
             "css": [
@@ -44,9 +45,11 @@
         },
         {
             "matches": [
-                "https://twitter.com/*/status/*"
+                "https://twitter.com/*/status/*",
+                "https://x.com/*/status/*"
             ],
             "js": [
+                "content_common.js",
                 "twitter_script.js"
             ],
             "css": [
@@ -59,6 +62,7 @@
                 "https://pbs.twimg.com/*"
             ],
             "js": [
+                "content_common.js",
                 "twitter_single_image_script.js"
             ],
             "css": [
@@ -74,6 +78,7 @@
             "matches": [
                 "https://www.pixiv.net/*",
                 "https://twitter.com/*",
+                "https://x.com/*",
                 "https://pbs.twimg.com/*"
             ]
         }

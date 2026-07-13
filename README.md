@@ -25,6 +25,7 @@ The build creates these generated directories:
 Install the Python dependencies, then start the backend from `python_server/`:
 
 ```bash
+python -m pip install -r requirements.txt
 python -m uvicorn app:app --reload
 ```
 
@@ -47,4 +48,5 @@ The extension expects the backend at `http://localhost:8000` by default.
 
 - `https://www.pixiv.net/en/artworks/*`
 - `https://twitter.com/*/status/*`
+- `https://x.com/*/status/*`
 - `https://pbs.twimg.com/*`

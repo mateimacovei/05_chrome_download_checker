@@ -1,16 +1,16 @@
 var currentUrl = "";
 
-chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
+chrome.storage.sync.get(["hidden"], (data) => {
     if (data.hidden != true) {
-        const backendUrl = data.backendUrl || "http://localhost:8000";
         var TOTAL_HEIGHT = 300
         var TOTAL_WIDTH = 200
         var TOP_BAR_HEIGHT = 50
+        var PNG_BUTTON_CONTAINER_HEIGHT = window.location.href.indexOf("=png") == -1 ? 40 : 0
 
         //Creating Elements
         var parentDiv = document.createElement("div")
         parentDiv.id = "downloadedFinderExtensionRootDiv"
-        parentDiv.classList.add('fixed');
+        parentDiv.classList.add('downloaded-finder-fixed');
         parentDiv.style.width = TOTAL_WIDTH + 'px'
         parentDiv.style.height = TOTAL_HEIGHT + 'px'
 
@@ -18,36 +18,43 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
         var topBarDiv = create_top_bar()
         var contentDiv = document.createElement("div")
         contentDiv.style.width = TOTAL_WIDTH + 'px'
-        contentDiv.style.height = (TOTAL_HEIGHT - TOP_BAR_HEIGHT) + 'px'
-        contentDiv.classList.add('frame');
-        parentDiv.replaceChildren(topBarDiv, contentDiv)
+        contentDiv.style.height = (TOTAL_HEIGHT - TOP_BAR_HEIGHT - PNG_BUTTON_CONTAINER_HEIGHT) + 'px'
+        contentDiv.classList.add('downloaded-finder-frame');
+        if (PNG_BUTTON_CONTAINER_HEIGHT > 0) {
+            parentDiv.replaceChildren(topBarDiv, contentDiv, create_png_button_container())
+        } else {
+            parentDiv.replaceChildren(topBarDiv, contentDiv)
+        }
 
 
         chrome.storage.sync.get("color", ({ color }) => {
             parentDiv.style.backgroundColor = color;
         });
 
+        let requestDownloadCheck = globalThis.downloadedFinderExtension.requestDownloadCheck;
+        let navigateToUrl = globalThis.downloadedFinderExtension.navigateToUrl;
+        let parseTwitterImageName = globalThis.downloadedFinderExtension.parseTwitterImageName;
+
         function performCallToServer() {
             console.log("starting search");
-            let imageInPage = currentUrl.substring(28, currentUrl.indexOf('?format='));
-
-            let loadImages = new XMLHttpRequest()
-            loadImages.onreadystatechange = function () {
-                if (this.readyState == 4) {
-                    if (this.status == 200) {
-                        console.log('Success');
-                        let response = JSON.parse(this.responseText)
-                        setContentResult(response, imageInPage)
-                    }
-                    else {
-                        setAsFailure()
-                    }
-                }
+            let imageInPage = parseTwitterImageName(currentUrl);
+            if (!imageInPage) {
+                replaceContentWithText('No image found. Go to tweet')
+                return;
             }
 
-
-            loadImages.open("GET", backendUrl + "/contains?name=" + imageInPage, true);
-            loadImages.send();
+            requestDownloadCheck({
+                method: "GET",
+                path: "/contains",
+                query: { name: imageInPage },
+            }, (data) => {
+                if (data === null) {
+                    setAsFailure()
+                    return;
+                }
+                console.log('Success');
+                setContentResult(data, imageInPage)
+            });
         }
 
         function replaceContentWithText(string) {
@@ -55,7 +62,9 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             let textDiv = document.createElement("div")
             textDiv.replaceChildren(text)
             textDiv.style.paddingLeft = '10px'
+            textDiv.style.paddingRight = '10px'
             textDiv.style.color = 'rgb(255 255 255)'
+            textDiv.style.overflowWrap = 'anywhere'
             contentDiv.replaceChildren(textDiv)
         }
 
@@ -82,12 +91,30 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             }
         }
 
-        function create_centering_div() {
-            let centeringDiv = document.createElement("div")
-            centeringDiv.style.width = TOP_BAR_HEIGHT + 'px'
-            centeringDiv.style.height = TOP_BAR_HEIGHT + 'px'
-            centeringDiv.classList.add('frame');
-            return centeringDiv
+        function create_toolbar_div() {
+            let toolbarDiv = document.createElement("div")
+            toolbarDiv.style.width = TOTAL_WIDTH + 'px'
+            toolbarDiv.style.height = TOP_BAR_HEIGHT + 'px'
+            toolbarDiv.classList.add('downloaded-finder-toolbar');
+            return toolbarDiv
+        }
+
+        function create_png_button_container() {
+            let pngButtonContainer = document.createElement("div")
+            pngButtonContainer.style.width = TOTAL_WIDTH + 'px'
+            pngButtonContainer.style.height = PNG_BUTTON_CONTAINER_HEIGHT + 'px'
+            pngButtonContainer.classList.add('downloaded-finder-png-button-container')
+
+            let button = document.createElement('button')
+            button.classList.add('downloaded-finder-png-button')
+            button.textContent = "Go to png"
+            button.addEventListener('click', async () => {
+                var newUrl = window.location.href.replace('=jpg', '=png')
+                navigateToUrl(newUrl)
+            });
+
+            pngButtonContainer.replaceChildren(button)
+            return pngButtonContainer
         }
 
 
@@ -102,25 +129,29 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             let topBarDiv = document.createElement("div")
             topBarDiv.style.width = TOTAL_WIDTH + 'px'
             topBarDiv.style.height = TOP_BAR_HEIGHT + 'px'
+            topBarDiv.classList.add('downloaded-finder-top-bar');
 
             let refreshIcon = document.createElement("img")
             refreshIcon.src = chrome.runtime.getURL('images/resources/reload_icon.png')
             refreshIcon.alt = "Refresh"
             refreshIcon.style.width = (TOP_BAR_HEIGHT - 15) + 'px'
             refreshIcon.style.height = (TOP_BAR_HEIGHT - 15) + 'px'
+            refreshIcon.style.flex = '0 0 auto'
             refreshIcon.draggable = false
             refreshIcon.addEventListener("click", async () => { checkURLchange(true) });
 
             let titleText = document.createElement('h3')
-            titleText.textContent = " Image finder"
-            titleText.style.width = (TOTAL_WIDTH - TOP_BAR_HEIGHT) + 'px'
-            titleText.style.display = 'inline-block'
-            titleText.style.float = 'left'
-            titleText.style.padding = '40px'
+            titleText.textContent = "Image finder"
+            titleText.style.flex = '1 1 auto'
+            titleText.style.margin = '0'
+            titleText.style.padding = '0'
             titleText.style.color = 'rgb(255 255 255)'
+            titleText.style.fontSize = '16px'
+            titleText.style.lineHeight = '18px'
+            titleText.style.textAlign = 'center'
+            titleText.style.whiteSpace = 'nowrap'
 
-            var centeringDiv = create_centering_div()
-            var centeringDiv2 = create_centering_div()
+            var toolbarDiv = create_toolbar_div()
 
 
             let closeIcon = document.createElement("img")
@@ -128,6 +159,7 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             closeIcon.alt = "Close"
             closeIcon.style.width = (TOP_BAR_HEIGHT - 15) + 'px'
             closeIcon.style.height = (TOP_BAR_HEIGHT - 15) + 'px'
+            closeIcon.style.flex = '0 0 auto'
             closeIcon.draggable = false
             closeIcon.addEventListener("click", async () => {
                 parentDiv.style.display = "none"
@@ -135,12 +167,8 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
                 chrome.storage.sync.set({ hidden });
             });
 
-            // centeringDiv.replaceChildren(closeIcon)
-            // centeringDiv2.replaceChildren(refreshIcon)
-            // topBarDiv.replaceChildren(centeringDiv2, titleText, centeringDiv)
-
-            centeringDiv.replaceChildren(refreshIcon, titleText, closeIcon)
-            topBarDiv.replaceChildren(centeringDiv)
+            toolbarDiv.replaceChildren(refreshIcon, titleText, closeIcon)
+            topBarDiv.replaceChildren(toolbarDiv)
 
             return topBarDiv
         }

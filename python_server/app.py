@@ -1,20 +1,8 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List
-from fastapi.middleware.cors import CORSMiddleware
 
 from file_scanner import read_config_and_get_files, MyFile
 
 app = FastAPI()
-
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # init
 files_found = read_config_and_get_files()
@@ -27,7 +15,7 @@ async def ping():
 
 @app.get("/refresh", status_code=200)
 async def refresh_files():
-    # not working
+    global files_found
     files_found = read_config_and_get_files()
     return files_found
 

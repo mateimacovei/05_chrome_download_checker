@@ -1,8 +1,7 @@
 var currentUrl = "";
 
-chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
+chrome.storage.sync.get(["hidden"], (data) => {
     if (data.hidden != true) {
-        const backendUrl = data.backendUrl || "http://localhost:8000";
         var TOTAL_HEIGHT = 300
         var TOTAL_WIDTH = 200
         var TOP_BAR_HEIGHT = 50
@@ -12,7 +11,7 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
         //Creating Elements
         var parentDiv = document.createElement("div")
         parentDiv.id = "downloadedFinderExtensionRootDiv"
-        parentDiv.classList.add('fixed');
+        parentDiv.classList.add('downloaded-finder-fixed');
         parentDiv.style.width = TOTAL_WIDTH + 'px'
         parentDiv.style.height = TOTAL_HEIGHT + 'px'
 
@@ -21,7 +20,7 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
         var contentDiv = document.createElement("div")
         contentDiv.style.width = TOTAL_WIDTH + 'px'
         contentDiv.style.height = (TOTAL_HEIGHT - TOP_BAR_HEIGHT) + 'px'
-        contentDiv.classList.add('frame');
+        contentDiv.classList.add('downloaded-finder-frame');
         parentDiv.replaceChildren(topBarDiv, contentDiv)
 
 
@@ -29,35 +28,59 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             parentDiv.style.backgroundColor = color;
         });
 
+        let requestDownloadCheck = globalThis.downloadedFinderExtension.requestDownloadCheck;
+        let parseTwitterImageName = globalThis.downloadedFinderExtension.parseTwitterImageName;
+
         function findImagesInPage() {
             if (currentUrl.indexOf('/photo/') == -1) {
-                return extractFromImages(document.querySelector('div[data-testid="cellInnerDiv"]').getElementsByTagName('img'));
+                let cellInnerDiv = document.querySelector('div[data-testid="cellInnerDiv"]');
+                if (!cellInnerDiv) {
+                    return [];
+                }
+                return extractFromImages(cellInnerDiv.getElementsByTagName('img'));
             } else {
-                images = document.querySelectorAll('li[role="listitem"]')
+                let images = document.querySelectorAll('li[role="listitem"]')
                 let result = [];
                 if (images.length > 0) {
                     for (var i = 0; i < images.length; i++) {
 
                         let imgHtmlEl = images[i].getElementsByTagName('img')[0];
+                        if (!imgHtmlEl) {
+                            continue;
+                        }
                         if (imgHtmlEl.getAttribute("alt") == "Image") {
                             let url = imgHtmlEl.src;
-                            result.push(url.substring(28, url.indexOf('?format=')))
+                            let imageName = parseTwitterImageName(url);
+                            if (imageName) {
+                                result.push(imageName)
+                            }
 
                         }
                     }
                     return result;
                 } else {
-                    return extractFromImages(document.querySelector('div[data-testid="swipe-to-dismiss"]').getElementsByTagName('img'));
+                    let swipeToDismiss = document.querySelector('div[data-testid="swipe-to-dismiss"]');
+                    if (!swipeToDismiss) {
+                        return [];
+                    }
+                    return extractFromImages(swipeToDismiss.getElementsByTagName('img'));
                 }
             }
         }
 
         function extractFromImages(imgHtmlElements) {
             let results = [];
+            if (!imgHtmlElements) {
+                return results;
+            }
             for (var i = 0; i < imgHtmlElements.length; i++) {
-                if (imgHtmlElements[i].getAttribute("alt") == "Image") {
-                    let url = imgHtmlElements[i].src;
-                    results.push(url.substring(28, url.indexOf('?format=')))
+                let imgHtmlEl = imgHtmlElements[i];
+                if (imgHtmlEl.getAttribute("alt") == "Image") {
+                    let url = imgHtmlEl.src;
+                    let imageName = parseTwitterImageName(url);
+                    if (imageName) {
+                        results.push(imageName)
+                    }
 
                 }
             }
@@ -72,25 +95,18 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
                 replaceContentWithText('No image found. Go to tweet');
                 return;
             }
-            let postBody = JSON.stringify(imagesInPage);
-
-            let loadImages = new XMLHttpRequest()
-            loadImages.onreadystatechange = function () {
-                if (this.readyState == 4) {
-                    if (this.status == 200) {
-                        console.log('Success');
-                        let response = JSON.parse(this.responseText)
-                        setContentResult(response, imagesInPage)
-                    }
-                    else {
-                        setAsFailure()
-                    }
+            requestDownloadCheck({
+                method: "POST",
+                path: "/contains",
+                body: imagesInPage,
+            }, (data) => {
+                if (data === null) {
+                    setAsFailure()
+                    return;
                 }
-            }
-
-            loadImages.open("POST", backendUrl + "/contains", true);
-            loadImages.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            loadImages.send(postBody);
+                console.log('Success');
+                setContentResult(data, imagesInPage)
+            });
         }
 
         function replaceContentWithText(string) {
@@ -98,7 +114,9 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             let textDiv = document.createElement("div")
             textDiv.replaceChildren(text)
             textDiv.style.paddingLeft = '10px'
+            textDiv.style.paddingRight = '10px'
             textDiv.style.color = 'rgb(255 255 255)'
+            textDiv.style.overflowWrap = 'anywhere'
             contentDiv.replaceChildren(textDiv)
         }
 
@@ -133,12 +151,12 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             return res;
         }
 
-        function create_centering_div() {
-            let centeringDiv = document.createElement("div")
-            centeringDiv.style.width = TOP_BAR_HEIGHT + 'px'
-            centeringDiv.style.height = TOP_BAR_HEIGHT + 'px'
-            centeringDiv.classList.add('frame');
-            return centeringDiv
+        function create_toolbar_div() {
+            let toolbarDiv = document.createElement("div")
+            toolbarDiv.style.width = TOTAL_WIDTH + 'px'
+            toolbarDiv.style.height = TOP_BAR_HEIGHT + 'px'
+            toolbarDiv.classList.add('downloaded-finder-toolbar');
+            return toolbarDiv
         }
 
 
@@ -153,25 +171,29 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             let topBarDiv = document.createElement("div")
             topBarDiv.style.width = TOTAL_WIDTH + 'px'
             topBarDiv.style.height = TOP_BAR_HEIGHT + 'px'
+            topBarDiv.classList.add('downloaded-finder-top-bar');
 
             let refreshIcon = document.createElement("img")
             refreshIcon.src = chrome.runtime.getURL('images/resources/reload_icon.png')
             refreshIcon.alt = "Refresh"
             refreshIcon.style.width = (TOP_BAR_HEIGHT - 15) + 'px'
             refreshIcon.style.height = (TOP_BAR_HEIGHT - 15) + 'px'
+            refreshIcon.style.flex = '0 0 auto'
             refreshIcon.draggable = false
             refreshIcon.addEventListener("click", async () => { checkURLchange(true) });
 
             let titleText = document.createElement('h3')
-            titleText.textContent = " Image finder"
-            titleText.style.width = (TOTAL_WIDTH - TOP_BAR_HEIGHT) + 'px'
-            titleText.style.display = 'inline-block'
-            titleText.style.float = 'left'
-            titleText.style.padding = '40px'
+            titleText.textContent = "Image finder"
+            titleText.style.flex = '1 1 auto'
+            titleText.style.margin = '0'
+            titleText.style.padding = '0'
             titleText.style.color = 'rgb(255 255 255)'
+            titleText.style.fontSize = '16px'
+            titleText.style.lineHeight = '18px'
+            titleText.style.textAlign = 'center'
+            titleText.style.whiteSpace = 'nowrap'
 
-            var centeringDiv = create_centering_div()
-            var centeringDiv2 = create_centering_div()
+            var toolbarDiv = create_toolbar_div()
 
 
             let closeIcon = document.createElement("img")
@@ -179,6 +201,7 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
             closeIcon.alt = "Close"
             closeIcon.style.width = (TOP_BAR_HEIGHT - 15) + 'px'
             closeIcon.style.height = (TOP_BAR_HEIGHT - 15) + 'px'
+            closeIcon.style.flex = '0 0 auto'
             closeIcon.draggable = false
             closeIcon.addEventListener("click", async () => {
                 parentDiv.style.display = "none"
@@ -186,12 +209,8 @@ chrome.storage.sync.get(["hidden", "backendUrl"], (data) => {
                 chrome.storage.sync.set({ hidden });
             });
 
-            // centeringDiv.replaceChildren(closeIcon)
-            // centeringDiv2.replaceChildren(refreshIcon)
-            // topBarDiv.replaceChildren(centeringDiv2, titleText, centeringDiv)
-
-            centeringDiv.replaceChildren(refreshIcon, titleText, closeIcon)
-            topBarDiv.replaceChildren(centeringDiv)
+            toolbarDiv.replaceChildren(refreshIcon, titleText, closeIcon)
+            topBarDiv.replaceChildren(toolbarDiv)
 
             return topBarDiv
         }
